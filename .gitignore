@@ -1,0 +1,6 @@
+.Rproj.user
+data/
+output/
+.RData
+.Rhistory
+bird-classification.Rproj
