@@ -36,7 +36,7 @@ clean_elevation <- function(elev) {
 
 df$elevation <- clean_elevation(df$elevation)
 
-df <- df %>% select(species, filename, latitude, longitude, time_as_numeric, month_as_numeric, elevation)
+df <- df %>% select(species, filename, latitude, longitude, time_as_numeric, month_as_numeric, elevation, ebird_code, filename)
 
 write_csv(df, file='./output/data.csv')
 

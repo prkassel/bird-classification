@@ -4,6 +4,8 @@ library(caret)
 
 
 df <- read_csv('./output/data.csv') %>% as.data.frame()
+df <- df %>% filter(substring(ebird_code, 1, 1) %in% letters[1:13])
+
 
 top_5 <- df %>% group_by(species) %>% summarise(n=n()) %>% arrange(desc(n)) %>% slice(1:5) %>% select(species)
 
@@ -17,7 +19,7 @@ df %>% ggplot(aes(longitude, latitude, color=species)) + geom_point()
 spring <- df %>% filter(month_as_numeric %in% seq(3,6, 1))
 spring %>% ggplot(aes(longitude, latitude, color=species)) + geom_point()
 
-winter <- df %>% filter(month_as_numeric %in% seq(12,3, 1))
+winter <- df %>% filter(month_as_numeric %in% seq(1,3, 1))
 winter %>%  ggplot(aes(longitude, latitude, color=species)) + geom_point()
 
 summer <- df %>% filter(month_as_numeric %in% seq(6,9, 1))

@@ -3,6 +3,7 @@ library(caret)
 
 
 df <- read_csv('./output/data.csv') %>% as.data.frame()
+df <- df %>% filter(substring(ebird_code, 1, 1) %in% letters[1:13])
 
 top_5 <- df %>% group_by(species) %>% summarise(n=n()) %>% arrange(desc(n)) %>% slice(1:5) %>% select(species)
 
@@ -17,17 +18,17 @@ sapply(df,function(x)sum(is.na(x)))
 df <- na.omit(df)
 
 set.seed(11, sample.kind="Rounding") # if using R 3.5 or earlier, use `set.seed(11)`
-ind <- createDataPartition(df$species, times=1, p=0.2, list=FALSE)
-train_set <- df[-ind,] %>% select(-filename)
-test_set <- df[ind,] %>% select(-filename)
+ind <- createDataPartition(df$ebird_code, times=1, p=0.2, list=FALSE)
+train_set <- df[-ind,] %>% select(-filename, -species)
+test_set <- df[ind,] %>% select(-filename, -species)
 
-train_knn <- train(species ~ ., method = "knn", 
+train_knn <- train(ebird_code ~ ., method = "knn", 
                    data = train_set, tuneGrid = data.frame(k = seq(3, 15, 2)))
 
-predictions <- predict(train_knn, test_set[,-1])
+predictions <- predict(train_knn, test_set[,-6])
 
-mean(predictions == test_set$species)
+mean(predictions == test_set$ebird_code)
 
 ### ~ 57% accuracy
-confusionMatrix(predictions, as.factor(test_set$species))$table
+confusionMatrix(predictions, as.factor(test_set$ebird_code))$table
 
