@@ -1,5 +1,6 @@
 library(tidyverse)
 library(caret)
+library(randomForest)
 
 
 df <- read_csv('./output/data.csv') %>% as.data.frame()
@@ -22,13 +23,13 @@ ind <- createDataPartition(df$ebird_code, times=1, p=0.2, list=FALSE)
 train_set <- df[-ind,] %>% select(-filename, -species)
 test_set <- df[ind,] %>% select(-filename, -species)
 
-train_knn <- train(ebird_code ~ ., method = "knn", 
-                   data = train_set, tuneGrid = data.frame(k = seq(3, 15, 2)))
+train_knn <- train(ebird_code ~ ., method = "knn", data=train_set, 
+                   tuneGrid = data.frame(k = seq(1, 15, 2)), )
 
-predictions <- predict(train_knn, test_set[,-6])
+
+predictions <- predict(train_knn, test_set[,-7])
 
 mean(predictions == test_set$ebird_code)
 
-### ~ 57% accuracy
 confusionMatrix(predictions, as.factor(test_set$ebird_code))$table
 

@@ -12,12 +12,19 @@ df <- df %>% filter(substring(ebird_code, 1, 1) %in% letters[1:13])
 top_5 <- df %>% group_by(ebird_code) %>% summarise(n=n()) %>% arrange(desc(n)) %>% slice(1:5) %>% select(ebird_code)
 
 dat <- data.frame()
+
+songfiles <- df %>% filter(type == "song") %>% select(filename)
 #df <- df %>% filter(species %in% top_5$species)
 
+specie <- "comrav"
 
-dir <- paste(getwd(), 'data/xeno-canto-bird-recordings-extended-a-m/A-M/comrav', sep="/")
-files <- list.files(path=dir)
-files <- files[1:10]
+dir <- paste(getwd(), 'data/xeno-canto-bird-recordings-extended-a-m/A-M',specie, sep="/")
+# files <- list.files(path=dir)
+
+### FILTER ONLY FILES THAT HAVE BEEN LABELED AS SONG
+files <- df %>% filter(ebird_code == specie, type == "song")
+files <- na.omit(files)
+files <- files$filename[1:6]
 
 
 gen_file_specs <- function(filename, size=10) {
@@ -55,17 +62,6 @@ gen_file_specs <- function(filename, size=10) {
     
     s <- seq(1,208,16)
     for (v in s) {
-      # v_end <- v + 63
-      # for (h in s) {
-      #   h_end <- h + 63
-      #   #print(c(h,h_end,v,v_end))
-      #   
-      #   box <- try(m[h:h_end,v:v_end])
-      #   if(inherits(box, "try-error")) {
-      #     next
-      #   }
-      #   boxes <- boxes %>% add_row(h,h_end,v,v_end,sta=sd(box))
-      # }
       v_end <- v + 63
       box <- try(m[v:v_end,1:256])
       if(inherits(box, "try-error")) {
@@ -87,10 +83,6 @@ gen_file_specs <- function(filename, size=10) {
   samples <- mclapply(windows, function(window) {
     process_sample(window)
   }, mc.cores = 4)
-  # samples <- lapply(windows, function(window) {
-  #   process_sample(window)
-  # })
-
   samples
 }
 
@@ -116,3 +108,4 @@ df_spectrograms <- process_files()
 df_spectrograms$filename <- as.character(df_spectrograms$filename)
 df_spectrograms$spectrograms <- as.matrix(df_spectrograms$spectrograms)
 
+### image(sample(df_spectrograms$spectrogram,1)[[1]],col=topo.colors(256))

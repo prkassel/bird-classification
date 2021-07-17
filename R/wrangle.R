@@ -3,9 +3,9 @@ library(lubridate)
 library(stringr)
 
 df <- read_csv('./data/xeno-canto-bird-recordings-extended-a-m/train_extended.csv')
+df <- df %>% filter(substring(ebird_code, 1, 1) %in% letters[1:13])
 
-
-df <- df %>% filter(country == "United States")
+df <- df %>% filter(country == "United States", type %in% c("song", "call"))
 
 
 ### Convert Time to the hour (0 - 23) that it was recorded
@@ -36,7 +36,7 @@ clean_elevation <- function(elev) {
 
 df$elevation <- clean_elevation(df$elevation)
 
-df <- df %>% select(species, filename, latitude, longitude, time_as_numeric, month_as_numeric, elevation, ebird_code, filename)
+df <- df %>% select(species, filename, latitude, longitude, time_as_numeric, month_as_numeric, elevation, type, ebird_code, filename)
 
 write_csv(df, file='./output/data.csv')
 
