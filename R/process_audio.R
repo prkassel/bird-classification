@@ -24,7 +24,7 @@ dir <- paste(getwd(), 'data/xeno-canto-bird-recordings-extended-a-m/A-M',specie,
 ### FILTER ONLY FILES THAT HAVE BEEN LABELED AS SONG
 files <- df %>% filter(ebird_code == specie, type == "song")
 files <- na.omit(files)
-files <- files$filename[1:6]
+files <- files$filename[1:2]
 
 
 gen_file_specs <- function(filename, size=10) {
@@ -52,7 +52,7 @@ gen_file_specs <- function(filename, size=10) {
     
     ### Generate spectrogram  (begins as 256 X 256)
     m <- melfcc(clip, sr=clip@samp.rate, usecmp=TRUE, minfreq = 1400,
-      spec_out = TRUE, nbands=256, hoptime=size/256)$aspectrum
+      spec_out = TRUE, nbands=128, hoptime=size/128)$aspectrum
 
    ### Stride through the spectrogram matrix at 64X64 "pixel box" intervals
    ### and find the one that has the greatest standard deviation
@@ -60,14 +60,14 @@ gen_file_specs <- function(filename, size=10) {
                       c("h","h_end","v","v_end","sta"))
     print(dim(m))
     
-    s <- seq(1,208,16)
+    s <- seq(1,104,31)
     for (v in s) {
-      v_end <- v + 63
-      box <- try(m[v:v_end,1:256])
+      v_end <- v + 31
+      box <- try(m[v:v_end,1:128])
       if(inherits(box, "try-error")) {
         next
       }
-      boxes <- boxes %>% add_row(h=v,h_end=v_end,v=1,v_end=256,sta=sd(box))
+      boxes <- boxes %>% add_row(h=v,h_end=v_end,v=1,v_end=128,sta=sd(box))
     }
     
     ### box with the greatest standard dev
@@ -89,23 +89,30 @@ gen_file_specs <- function(filename, size=10) {
 
 process_files <- function() {
   dat <- data.frame(filenames=c(), spectrograms=c())
-  
+  m_labels <- paste("m", seq(1,32 * 128, 1),sep="")
   for (file in files) {
     print(file)
+    
     spectrograms <- gen_file_specs(file)
+    wide_spectrograms <- data.frame()
     filename <- c()
     for (spec in spectrograms) {
+      df <- data.frame(values=as.vector(t(spec)))
+      df$m_labels <- m_labels
+      df <- pivot_wider(df, names_from = m_labels, values_from = values)
+      wide_spectrograms <- rbind(wide_spectrograms, df)
       filename <- c(filename, file)
     }
-    labeled_spectrograms <- cbind(filename, spectrograms)
+    labeled_spectrograms <- cbind(filename, wide_spectrograms)
     dat <- rbind(dat,labeled_spectrograms)
   }
   dat
 }
 
+
+
 df_spectrograms <- process_files()
 
 df_spectrograms$filename <- as.character(df_spectrograms$filename)
-df_spectrograms$spectrograms <- as.matrix(df_spectrograms$spectrograms)
 
 ### image(sample(df_spectrograms$spectrogram,1)[[1]],col=topo.colors(256))
